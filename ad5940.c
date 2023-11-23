@@ -576,15 +576,15 @@ void AD5940_SweepNext(SoftSweepCfg_Type *pSweepCfg, float *pNextFreq)
       {
          if(++pSweepCfg->SweepIndex == pSweepCfg->SweepPoints)
             pSweepCfg->SweepIndex = 0;
-         frequency = pSweepCfg->SweepStart*pow(10,pSweepCfg->SweepIndex*log10(pSweepCfg->SweepStop/pSweepCfg->SweepStart)/(pSweepCfg->SweepPoints-1));
+         frequency = pSweepCfg->SweepStart*powf(10,pSweepCfg->SweepIndex*log10f(pSweepCfg->SweepStop/pSweepCfg->SweepStart)/(pSweepCfg->SweepPoints-1));
       }
       else
       {
          pSweepCfg->SweepIndex --;
          if(pSweepCfg->SweepIndex >= pSweepCfg->SweepPoints)
             pSweepCfg->SweepIndex = pSweepCfg->SweepPoints-1;
-         frequency = pSweepCfg->SweepStop*pow(10,pSweepCfg->SweepIndex*
-                                     (log10(pSweepCfg->SweepStart/pSweepCfg->SweepStop)/(pSweepCfg->SweepPoints-1)));
+         frequency = pSweepCfg->SweepStop*powf(10,pSweepCfg->SweepIndex*
+                                     (log10f(pSweepCfg->SweepStart/pSweepCfg->SweepStop)/(pSweepCfg->SweepPoints-1)));
       }
    }
    else/* Linear step */
@@ -593,14 +593,14 @@ void AD5940_SweepNext(SoftSweepCfg_Type *pSweepCfg, float *pNextFreq)
       {
          if(++pSweepCfg->SweepIndex == pSweepCfg->SweepPoints)
             pSweepCfg->SweepIndex = 0;
-         frequency = pSweepCfg->SweepStart + pSweepCfg->SweepIndex*(double)(pSweepCfg->SweepStop-pSweepCfg->SweepStart)/(pSweepCfg->SweepPoints-1);
+         frequency = pSweepCfg->SweepStart + pSweepCfg->SweepIndex*(float)(pSweepCfg->SweepStop-pSweepCfg->SweepStart)/(pSweepCfg->SweepPoints-1);
       }
       else
       {
          pSweepCfg->SweepIndex --;
          if(pSweepCfg->SweepIndex >= pSweepCfg->SweepPoints)
             pSweepCfg->SweepIndex = pSweepCfg->SweepPoints-1;
-         frequency = pSweepCfg->SweepStop + pSweepCfg->SweepIndex*(double)(pSweepCfg->SweepStart - pSweepCfg->SweepStop)/(pSweepCfg->SweepPoints-1);
+         frequency = pSweepCfg->SweepStop + pSweepCfg->SweepIndex*(float)(pSweepCfg->SweepStart - pSweepCfg->SweepStop)/(pSweepCfg->SweepPoints-1);
       }
    }
    
@@ -786,7 +786,7 @@ FreqParams_Type AD5940_GetFreqParameters(float freq)
 	uint32_t n1 = 0;	// Sample rate after ADC filters
 	uint32_t n2 = 0; // Sample rate after DFT block
 	uint32_t iCycle = 0;
-	FreqParams_Type freq_params;
+	FreqParams_Type freq_params = {0};
 	/* High power mode */
 	if(freq >= 20000)
 	{
@@ -799,7 +799,7 @@ FreqParams_Type AD5940_GetFreqParameters(float freq)
 		return freq_params;		
 	}
 	
-	if(freq < 0.51)
+	if(freq < 0.51f)
 	{
 		freq_params. DftSrc = DFTSRC_SINC2NOTCH;
 		freq_params.ADCSinc2Osr = 6;
@@ -814,7 +814,7 @@ FreqParams_Type AD5940_GetFreqParameters(float freq)
 	for(uint8_t i = 0; i<sizeof(sinc2osr_table) / sizeof(uint32_t); i++)
 	{
 		n1 = sinc2osr_table[i] * sinc3osr_table[1];
-		if(((AdcRate/n1) < freq * 10) && (freq<20e3))
+		if(((AdcRate/n1) < freq * 10.f) && (freq<20e3f))
 			continue;
 		
 		/* Try DFT number */
@@ -3099,7 +3099,7 @@ AD5940Err AD5940_ADCPGACal(ADCPGACal_Type *pADCPGACal)
   if(pADCPGACal == NULL) return AD5940ERR_NULLP;
   if(pADCPGACal->ADCPga > ADCPGA_9) return AD5940ERR_PARA;  /* Parameter Error */
   
-  if(pADCPGACal->AdcClkFreq > (32000000*0.8))
+  if(pADCPGACal->AdcClkFreq > (32000000.f*0.8f))
     bADCClk32MHzMode = bTRUE; 
 
   /**
@@ -3211,7 +3211,7 @@ AD5940Err AD5940_ADCPGACal(ADCPGACal_Type *pADCPGACal)
       hsloop_cfg.WgCfg.GainCalEn = bTRUE;
       hsloop_cfg.WgCfg.OffsetCalEn = bTRUE;
       hsloop_cfg.WgCfg.WgType = WGTYPE_MMR;
-      uint32_t HSDACCode;
+      uint32_t HSDACCode = 0x800;
       if(pADCPGACal->ADCPga == ADCPGA_4)
         HSDACCode = 0x800 + 0x300;  /* 0x300--> 0x300/0x1000*0.8*BUFFERGAIN2 = 0.3V. */
       else if(pADCPGACal->ADCPga == ADCPGA_9)
@@ -3273,7 +3273,7 @@ AD5940Err AD5940_LPTIAOffsetCal(LPTIAOffsetCal_Type *pLPTIAOffsetCal)
   BoolFlag bADCClk32MHzMode;
   
   if(pLPTIAOffsetCal == NULL) return AD5940ERR_NULLP;  
-  if(pLPTIAOffsetCal->AdcClkFreq > (32000000*0.8))
+  if(pLPTIAOffsetCal->AdcClkFreq > (32000000.f*0.8f))
     bADCClk32MHzMode = bTRUE;
 
   /* Step0: Do initialization */
@@ -3413,8 +3413,8 @@ AD5940Err AD5940_HSRtiaCal(HSRTIACal_Type *pCalCfg, void *pResult)
   float ExcitVolt; /* Excitation voltage, unit is mV */
   uint32_t RtiaVal;
   uint32_t const HpRtiaTable[]={200,1000,5000,10000,20000,40000,80000,160000,0};
-  uint32_t const HSTIADERLOADTable[]={0,10,30,50,100,999999999999};
-  uint32_t const HSTIADERTIATable[] = {50,100,200,1000,5000,10000,20000,40000,80000,160000,0,999999999999999};
+  uint32_t const HSTIADERLOADTable[]={0,10,30,50,100,-1};
+  uint32_t const HSTIADERTIATable[] = {50,100,200,1000,5000,10000,20000,40000,80000,160000,0,-1};
   uint32_t WgAmpWord;
 
   iImpCar_Type DftRcalVolt, DftRtiaVolt;
@@ -3429,7 +3429,7 @@ AD5940Err AD5940_HSRtiaCal(HSRTIACal_Type *pCalCfg, void *pResult)
   if(pResult == NULL)
       return AD5940ERR_NULLP;
 
-  if(pCalCfg->AdcClkFreq > (32000000*0.8))
+  if(pCalCfg->AdcClkFreq > (32000000.f*0.8f))
     bADCClk32MHzMode = bTRUE; 
 
   /* Calculate the excitation voltage we should use based on RCAL/Rtia */
@@ -3455,23 +3455,23 @@ AD5940Err AD5940_HSRtiaCal(HSRTIACal_Type *pCalCfg, void *pResult)
     ADC input range is +-1.5V which is enough for calibration.
     
   */
-  ExcitVolt = 1800*0.8*pCalCfg->fRcal/RtiaVal;
+  ExcitVolt = 1800.f*0.8f*pCalCfg->fRcal/RtiaVal;
 
-  if(ExcitVolt <= 800*0.05) /* Voltage is so small that we can enable the attenuator of DAC(1/5) and Excitation buffer(1/4). 800mVpp is the DAC output voltage */
+  if(ExcitVolt <= 800.f*0.05f) /* Voltage is so small that we can enable the attenuator of DAC(1/5) and Excitation buffer(1/4). 800mVpp is the DAC output voltage */
   {
     ExcitBuffGain = EXCITBUFGAIN_0P25;
     HsDacGain = HSDACGAIN_0P2;
     /* Excitation buffer voltage full range is 800mVpp*0.05 = 40mVpp */
     WgAmpWord = ((uint32_t)(ExcitVolt/40*2047*2)+1)>>1; /* Assign value with rounding (0.5 LSB error) */
   }
-  else if(ExcitVolt <= 800*0.25) /* Enable Excitation buffer attenuator */
+  else if(ExcitVolt <= 800.f*0.25f) /* Enable Excitation buffer attenuator */
   {
     ExcitBuffGain = EXCITBUFGAIN_0P25;
     HsDacGain = HSDACGAIN_1;
     /* Excitation buffer voltage full range is 800mVpp*0.25 = 200mVpp */
     WgAmpWord = ((uint32_t)(ExcitVolt/200*2047*2)+1)>>1; /* Assign value with rounding (0.5 LSB error) */
   }
-  else if(ExcitVolt <= 800*0.4) /* Enable DAC attenuator */
+  else if(ExcitVolt <= 800.f*0.4f) /* Enable DAC attenuator */
   {
     ExcitBuffGain = EXCITBUFGAIN_2;
     HsDacGain = HSDACGAIN_0P2;
@@ -3662,7 +3662,7 @@ AD5940Err AD5940_LPRtiaCal(LPRTIACal_Type *pCalCfg, void *pResult)
   if(pResult == NULL)
       return AD5940ERR_NULLP;
 
-  if(pCalCfg->AdcClkFreq > (32000000*0.8))
+  if(pCalCfg->AdcClkFreq > (32000000.f*0.8f))
     bADCClk32MHzMode = bTRUE;   /* Clock frequency is high. */
   if(pCalCfg->fFreq == 0.0f)    /* Frequency is zero means we calibrate RTIA at DC. */
     bDCMode = bTRUE;
@@ -3692,7 +3692,7 @@ AD5940Err AD5940_LPRtiaCal(LPRTIACal_Type *pCalCfg, void *pResult)
                             /* Maximum peak2peak voltage for AD5940 10kOhm RCAL is 1400mV */
   #define __MAXVOLT_AMP_CODE  (MAXVOLT_P2P*2047L/2200)
  /** @endcond */
-  ExcitVolt = 2000*0.8*pCalCfg->fRcal/RtiaVal;
+  ExcitVolt = 2000*0.8f*pCalCfg->fRcal/RtiaVal;
   WgAmpWord = ((uint32_t)(ExcitVolt/2200*2047*2)+1)>>1; /* Assign value with rounding (0.5 LSB error) */
   if(WgAmpWord > __MAXVOLT_AMP_CODE)
     WgAmpWord = __MAXVOLT_AMP_CODE;
@@ -4143,7 +4143,7 @@ AD5940Err AD5940_LPDACCal(LPDACCal_Type *pCalCfg, LPDACPara_Type *pResult)
   
   if(pCalCfg == NULL) return AD5940ERR_NULLP; 
   if(pResult == NULL) return AD5940ERR_NULLP;  
-  if(pCalCfg->AdcClkFreq > (32000000*0.8))
+  if(pCalCfg->AdcClkFreq > (32000000.f*0.8f))
     bADCClk32MHzMode = bTRUE;
 
   /* Step0: Do initialization */
